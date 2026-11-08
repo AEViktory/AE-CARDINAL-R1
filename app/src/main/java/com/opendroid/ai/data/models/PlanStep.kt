@@ -18,5 +18,5 @@ data class PlanStep(
 )
 
 enum class StepStatus {
-    PENDING, RUNNING, COMPLETED, FAILED
+    PENDING, RUNNING, COMPLETED, FAILED, WAITING_FOR_USER
 }

@@ -24,7 +24,7 @@ import com.opendroid.ai.data.models.StepStatus
 import com.opendroid.ai.ui.theme.*
 
 enum class StepDisplayState {
-    PENDING, RUNNING, COMPLETED, FAILED, AUTO_FIXING, REPAIRED, SKIPPED, BLOCKED
+    PENDING, RUNNING, COMPLETED, FAILED, AUTO_FIXING, REPAIRED, SKIPPED, BLOCKED, WAITING_FOR_USER
 }
 
 fun getDisplayState(step: PlanStep): StepDisplayState {
@@ -38,6 +38,7 @@ fun getDisplayState(step: PlanStep): StepDisplayState {
         step.status == StepStatus.FAILED && errorText.contains("blocked") -> StepDisplayState.BLOCKED
         step.status == StepStatus.COMPLETED -> StepDisplayState.COMPLETED
         step.status == StepStatus.RUNNING -> StepDisplayState.RUNNING
+        step.status == StepStatus.WAITING_FOR_USER -> StepDisplayState.WAITING_FOR_USER
         step.status == StepStatus.FAILED -> StepDisplayState.FAILED
         else -> StepDisplayState.PENDING
     }
@@ -67,6 +68,7 @@ fun PlanStepCard(
         StepDisplayState.REPAIRED -> AccentPurple
         StepDisplayState.SKIPPED -> TextSecondary
         StepDisplayState.BLOCKED -> Color(0xFFFF5722) // Deep Orange
+        StepDisplayState.WAITING_FOR_USER -> Color(0xFF29B6F6) // Light Blue
         StepDisplayState.PENDING -> TextSecondary
     }
 
@@ -151,6 +153,7 @@ fun PlanStepCard(
                             StepDisplayState.REPAIRED -> Icons.Default.CheckCircle
                             StepDisplayState.SKIPPED -> Icons.Default.ArrowForward
                             StepDisplayState.BLOCKED -> Icons.Default.Warning
+                            StepDisplayState.WAITING_FOR_USER -> Icons.Default.Person
                             StepDisplayState.PENDING -> Icons.Default.PlayArrow
                         },
                         contentDescription = displayState.name,

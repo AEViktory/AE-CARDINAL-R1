@@ -1002,15 +1002,35 @@ class AgentLoop @Inject constructor(
         _agentState.value = AgentState.PlanProposed(plan)
     }
 
-    private suspend fun executePlanLoop(plan: Plan, context: Context, sessionId: String, autoApproved: Boolean = false) {
+    private suspend fun executePlanLoop(
+        plan: Plan,
+        context: Context,
+        sessionId: String,
+        autoApproved: Boolean = false,
+        budget: ExecutionBudget = ExecutionBudget()
+    ) {
         planManager.updatePlanStatus(PlanStatus.RUNNING)
         var currentPlanState = planManager.currentPlan.value ?: return
 
         while (true) {
-            // Cooperative cancellation checkpoint: ensures a cancelCurrentTask() call
-            // stops this loop promptly even on iterations that finish without ever
-            // hitting a suspending call that would otherwise surface the cancellation.
+            // Cooperative cancellation checkpoint
             currentCoroutineContext().ensureActive()
+
+            // Execution Budget enforcement (time, action limits, replans, failures)
+            val budgetHealth = budget.checkHealth()
+            if (budgetHealth != ExecutionBudget.ExhaustionReason.NONE) {
+                val reasonText = when (budgetHealth) {
+                    ExecutionBudget.ExhaustionReason.TIMEOUT -> "Execution budget exceeded: Deadline expired."
+                    ExecutionBudget.ExhaustionReason.MAX_ACTIONS_EXCEEDED -> "Execution budget exceeded: Maximum actions limit reached."
+                    ExecutionBudget.ExhaustionReason.MAX_REPLANS_EXCEEDED -> "Execution budget exceeded: Maximum replanning cycles reached."
+                    ExecutionBudget.ExhaustionReason.MAX_CONSECUTIVE_FAILURES_EXCEEDED -> "Execution budget exceeded: Maximum consecutive failures reached."
+                    else -> "Execution budget exhausted."
+                }
+                android.util.Log.e("AgentLoop", "Terminating plan: $reasonText")
+                planManager.updatePlanStatus(PlanStatus.FAILED)
+                speakAndSaveSummary(currentPlanState, false, sessionId)
+                break
+            }
 
             val nextStep = planManager.getActiveStep()
             if (nextStep == null) {
@@ -1045,7 +1065,53 @@ class AgentLoop @Inject constructor(
                 priorSteps = currentPlanState.steps
             )
 
+            // Validate that no unresolved step variable placeholders remain
+            val unresolvedParamErrors = ActionSequenceExecutor.findUnresolvedParameters(resolvedParams)
+            if (unresolvedParamErrors.isNotEmpty()) {
+                val errorMsg = unresolvedParamErrors.joinToString("; ")
+                android.util.Log.e("AgentLoop", "Aborting step '${stepToExecute.stepId}' due to unresolved variables: $errorMsg")
+                planManager.updateStepStatus(
+                    stepToExecute.stepId,
+                    StepStatus.FAILED,
+                    error = "Unresolved dependency parameters: $errorMsg"
+                )
+                currentPlanState = planManager.currentPlan.value ?: break
+                continue
+            }
+
+            // Verify runtime permissions before execution (Permission Gate)
+            val permCheck = com.opendroid.ai.core.permissions.ActionPermissionGate.checkPermissions(
+                context, stepToExecute.action
+            )
+            if (!permCheck.isGranted) {
+                val permError = permCheck.userFriendlyMessage ?: "Missing runtime permissions for ${stepToExecute.action}"
+                com.opendroid.ai.core.telemetry.AgentTelemetry.log(
+                    com.opendroid.ai.core.telemetry.AgentTelemetry.Category.VALIDATION,
+                    executionId = plan.planId,
+                    message = "Permission check failed: $permError",
+                    stepId = stepToExecute.stepId,
+                    toolId = stepToExecute.action,
+                    level = android.util.Log.WARN
+                )
+                planManager.updateStepStatus(
+                    stepToExecute.stepId,
+                    StepStatus.FAILED,
+                    error = permError
+                )
+                currentPlanState = planManager.currentPlan.value ?: break
+                continue
+            }
+
             // Execute the action dispatcher
+            budget.recordActionDispatched()
+            com.opendroid.ai.core.telemetry.AgentTelemetry.log(
+                com.opendroid.ai.core.telemetry.AgentTelemetry.Category.EXECUTION,
+                executionId = plan.planId,
+                message = "Dispatching action '${stepToExecute.action}'",
+                stepId = stepToExecute.stepId,
+                toolId = stepToExecute.action
+            )
+            val actionStartTimeMs = System.currentTimeMillis()
             var actionResult = try {
                 var result = actionSequenceExecutor.dispatch(stepToExecute.action, resolvedParams, context)
 
@@ -1055,7 +1121,15 @@ class AgentLoop @Inject constructor(
             } catch (e: Exception) {
                 android.util.Log.e("AgentLoop", "Exception executing action ${stepToExecute.action}: ${e.localizedMessage}", e)
                 ActionResult(false, null, e.localizedMessage ?: "Unknown execution error")
+            } finally {
+                val actionDurationMs = System.currentTimeMillis() - actionStartTimeMs
+                com.opendroid.ai.core.telemetry.AgentTelemetry.recordToolLatency(
+                    executionId = plan.planId,
+                    toolName = stepToExecute.action,
+                    durationMs = actionDurationMs
+                )
             }
+            budget.recordActionResult(actionResult.success)
 
             // Redaction must be based on the dispatcher's canonical mapped action,
             // not the raw plan action string — the dispatcher accepts non-canonical
@@ -1090,16 +1164,17 @@ class AgentLoop @Inject constructor(
                     result = actionResult.data ?: "Completed successfully."
                 )
             } else if (actionResult is ActionResult.PendingUserAction) {
-                // The action handed control to the user (e.g. the dialer is open awaiting a
-                // tap). Nothing failed, so no fallback and no failure replan - surface the
-                // hand-off in chat and speech, record it as the step result, and let the
-                // normal re-evaluation path decide what remains.
+                // The action handed control to the user (e.g. the dialer is open awaiting a tap).
+                // It is not completed yet; record as WAITING_FOR_USER so dependents are blocked and
+                // the plan is not marked finished prematurely.
                 handlePendingUserAction(actionResult, sessionId)
                 planManager.updateStepStatus(
                     stepToExecute.stepId,
-                    StepStatus.COMPLETED,
+                    StepStatus.WAITING_FOR_USER,
                     result = actionResult.message
                 )
+                currentPlanState = planManager.currentPlan.value ?: break
+                continue
             } else if (actionResult is ActionResult.UserActionRequired) {
                 // A user-facing flow (for example email compose) is not an
                 // executed side effect. Do not run an automated fallback or
@@ -1130,6 +1205,7 @@ class AgentLoop @Inject constructor(
                 reEvalEngine.get().extractLearning(stepToExecute.action, currentPlanState.goal)
 
                 // Trigger silent replanning
+                budget.recordReplan()
                 val completed = currentPlanState.steps.filter { it.status == StepStatus.COMPLETED }
                 val remaining = currentPlanState.steps.filter { it.status == StepStatus.PENDING }
 
@@ -1169,11 +1245,15 @@ class AgentLoop @Inject constructor(
                     }
                     "MODIFY" -> {
                         if (replan.updatedPlan != null) {
-                            val mergedSteps = currentPlanState.steps.filter { it.status != StepStatus.PENDING } +
-                                    replan.updatedPlan.steps.filter { step ->
-                                        currentPlanState.steps.none { it.stepId == step.stepId }
-                                    }
-                            planManager.startNewPlan(currentPlanState.copy(steps = mergedSteps), context)
+                            val mergeResult = PlanMerger.merge(currentPlanState, replan.updatedPlan.steps)
+                            val mergedPlan = when (mergeResult) {
+                                is PlanMerger.MergeResult.Success -> mergeResult.mergedPlan
+                                is PlanMerger.MergeResult.Rejected -> {
+                                    android.util.Log.e("AgentLoop", "Replan merge rejected: ${mergeResult.reason}. Keeping existing plan.")
+                                    currentPlanState
+                                }
+                            }
+                            planManager.startNewPlan(mergedPlan, context)
                             // Auto-approved plans: silently injected steps must not run
                             // past the allowlist. Re-check the merged plan's pending
                             // steps; if any is blocked, park the WHOLE remainder back
@@ -1213,8 +1293,11 @@ class AgentLoop @Inject constructor(
                 currentPlanState = planManager.currentPlan.value ?: break
                 continue
             } else {
-                // Try fallback action
-                if (actionSequenceExecutor.shouldAttemptFallback(actionResult, stepToExecute)) {
+                // Try fallback action (gated by idempotency and safety)
+                val canFallback = actionSequenceExecutor.shouldAttemptFallback(actionResult, stepToExecute) &&
+                        ActionIdempotencyPolicy.canSafelyRetry(stepToExecute.fallback)
+                if (canFallback) {
+                    budget.recordActionDispatched()
                     val fallbackResult = try {
                         actionSequenceExecutor.dispatch(stepToExecute.fallback, resolvedParams, context)
                     } catch (e: CancellationException) {
@@ -1222,6 +1305,7 @@ class AgentLoop @Inject constructor(
                     } catch (e: Exception) {
                         ActionResult(false, null, e.localizedMessage ?: "Unknown execution error")
                     }
+                    budget.recordActionResult(fallbackResult.success)
                     if (fallbackResult.success) {
                         planManager.updateStepStatus(
                             stepToExecute.stepId,
@@ -1292,11 +1376,15 @@ class AgentLoop @Inject constructor(
                 }
                 "MODIFY" -> {
                     if (reEval.updatedPlan != null) {
-                        val mergedSteps = currentPlanState.steps.filter { it.status != StepStatus.PENDING } +
-                                reEval.updatedPlan.steps.filter { step ->
-                                    currentPlanState.steps.none { it.stepId == step.stepId }
-                                }
-                        planManager.startNewPlan(currentPlanState.copy(steps = mergedSteps), context)
+                        val mergeResult = PlanMerger.merge(currentPlanState, reEval.updatedPlan.steps)
+                        val mergedPlan = when (mergeResult) {
+                            is PlanMerger.MergeResult.Success -> mergeResult.mergedPlan
+                            is PlanMerger.MergeResult.Rejected -> {
+                                android.util.Log.e("AgentLoop", "Step reEval merge rejected: ${mergeResult.reason}. Keeping existing plan.")
+                                currentPlanState
+                            }
+                        }
+                        planManager.startNewPlan(mergedPlan, context)
                     }
                 }
                 "CONTINUE" -> {

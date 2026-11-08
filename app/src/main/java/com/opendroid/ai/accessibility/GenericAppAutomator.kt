@@ -2,26 +2,38 @@ package com.opendroid.ai.accessibility
 
 import android.accessibilityservice.AccessibilityService
 import android.os.SystemClock
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 
 object GenericAppAutomator {
 
     private const val RETRY_TIMEOUT_MS = 5000L
-    private const val RETRY_INTERVAL_MS = 300L
+    private const val INITIAL_INTERVAL_MS = 100L
+    private const val MAX_INTERVAL_MS = 400L
 
     /**
      * Freshly launched apps (e.g. right after OPEN_APP or a self-contained action
-     * like PLAY_YOUTUBE) are often still cold-starting when the next automation step
-     * runs, so their UI elements aren't laid out yet. Polls [attempt] every
-     * [RETRY_INTERVAL_MS] until it succeeds or [RETRY_TIMEOUT_MS] elapses, instead of
-     * giving up after a single immediate try.
+     * like PLAY_YOUTUBE) are often cold-starting when the next automation step
+     * runs. Polls [attempt] with an adaptive backoff starting at [INITIAL_INTERVAL_MS]
+     * up to [MAX_INTERVAL_MS] until it succeeds or [RETRY_TIMEOUT_MS] elapses.
+     * Cooperatively checks coroutine cancellation at every iteration.
      */
     private suspend fun retryUntilTimeout(attempt: () -> Boolean): Boolean {
         val deadline = SystemClock.elapsedRealtime() + RETRY_TIMEOUT_MS
+        var currentInterval = INITIAL_INTERVAL_MS
         while (true) {
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
             if (attempt()) return true
-            if (SystemClock.elapsedRealtime() >= deadline) return false
-            delay(RETRY_INTERVAL_MS)
+            val now = SystemClock.elapsedRealtime()
+            if (now >= deadline) return false
+
+            val remaining = deadline - now
+            val waitTime = minOf(currentInterval, remaining)
+            if (waitTime <= 0L) return false
+
+            delay(waitTime)
+            currentInterval = minOf(MAX_INTERVAL_MS, (currentInterval * 1.5).toLong())
         }
     }
 

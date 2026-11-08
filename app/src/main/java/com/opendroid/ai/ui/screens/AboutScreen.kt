@@ -104,7 +104,7 @@ fun AboutScreen(
                             // transparent padding overflows into the Box's circle clip.
                             Image(
                                 painter = painterResource(id = R.drawable.bot),
-                                contentDescription = "OpenDroid app icon",
+                                contentDescription = "AE:CARDINAL app icon",
                                 modifier = Modifier.requiredSize(150.dp)
                             )
                         }
@@ -112,7 +112,7 @@ fun AboutScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "OpenDroid",
+                            text = "AE:CARDINAL",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = TextPrimary,
@@ -158,12 +158,12 @@ fun AboutScreen(
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "OpenDroid is an advanced autonomous AI assistant that runs directly on your Android device. " +
+                            text = "AE:CARDINAL is an advanced autonomous AI assistant that runs directly on your Android device. " +
                                     "It can understand natural language commands, create multi-step execution plans, and automate " +
                                     "virtually any task on your phone — from sending messages and making calls to controlling " +
                                     "system settings and managing files.\n\n" +
                                     "Powered by your choice of LLM provider (Gemini, OpenAI, Claude, Groq, local Ollama, and more), " +
-                                    "OpenDroid combines intelligent planning with real device automation through Android's Accessibility framework.",
+                                    "AE:CARDINAL combines intelligent planning with real device automation through Android's Accessibility framework.",
                             fontSize = 13.sp,
                             color = TextPrimary,
                             lineHeight = 20.sp
@@ -301,7 +301,7 @@ fun AboutScreen(
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "OpenDroid is open source software. Contributions, bug reports, and feature requests are welcome.",
+                            text = "AE:CARDINAL is open source software. Contributions, bug reports, and feature requests are welcome.",
                             fontSize = 13.sp,
                             color = TextPrimary,
                             textAlign = TextAlign.Center,

@@ -80,6 +80,26 @@ class ActionSequenceExecutor(
             .associate { it.stepId to it.result!! }
     )
 
+    companion object {
+        /**
+         * Inspects resolved parameters for dangling or unresolved step variable references (e.g. $stepId, $$stepId).
+         * Returns a list of descriptive errors if any parameter retains unresolved placeholders.
+         */
+        fun findUnresolvedParameters(resolvedParams: Map<String, String>): List<String> {
+            val unresolvedRegex = Regex("""(?:\$\$|\$)([a-zA-Z0-9_\-]+)""")
+            val errors = mutableListOf<String>()
+            for ((key, value) in resolvedParams) {
+                val matches = unresolvedRegex.findAll(value).toList()
+                for (match in matches) {
+                    val placeholder = match.value
+                    val referencedId = match.groupValues[1]
+                    errors.add("Parameter '$key' contains unresolved reference '$placeholder' to step '$referencedId'.")
+                }
+            }
+            return errors
+        }
+    }
+
     /** Executes a step and, when appropriate, its single fallback action. */
     suspend fun executeStep(
         step: PlanStep,

@@ -305,14 +305,11 @@ class PlanManager @Inject constructor(
 
     private fun hasDependenciesMet(step: PlanStep, allSteps: List<PlanStep>): Boolean {
         if (step.dependsOn.isEmpty()) return true
-        // A dependency is met when it has finished executing (COMPLETED or FAILED).
-        // Only PENDING or RUNNING dependencies should block execution.
-        // Previously this required COMPLETED, which meant a step with dependsOn
-        // would be stuck forever if the dependency succeeded but returned no data
-        // (since the dependency check was too strict).
+        // Rule: A mandatory dependency is met ONLY when its prerequisite step has COMPLETED successfully.
+        // A FAILED, RUNNING, PENDING, or WAITING_FOR_USER dependency blocks dependent execution.
         return step.dependsOn.all { depId ->
             val depStep = allSteps.find { it.stepId == depId }
-            depStep != null && (depStep.status == StepStatus.COMPLETED || depStep.status == StepStatus.FAILED)
+            depStep != null && depStep.status == StepStatus.COMPLETED
         }
     }
 }

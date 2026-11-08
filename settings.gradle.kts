@@ -23,6 +23,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "AETHEREAL CARDINAL"
+rootProject.name = "AE-CARDINAL"
 
 include(":app")

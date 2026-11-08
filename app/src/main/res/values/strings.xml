@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">AETHEREAL CARDINAL</string>
+    <string name="app_name">AE:CARDINAL</string>
+    <string name="accessibility_service_desc">Provides autonomous UI interaction, screen reading, and navigation assistance for AE:CARDINAL Agent control.</string>
 </resources>

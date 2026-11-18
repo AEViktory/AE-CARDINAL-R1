@@ -43,8 +43,11 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Set up Android SDK 36
-        uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: |
+          SDKMGR="$(find "$ANDROID_HOME/cmdline-tools" -maxdepth 2 -name sdkmanager -type f | head -n 1)"
+          yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
+          "$SDKMGR" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Make gradlew executable
         run: chmod +x gradlew
@@ -95,8 +98,11 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Set up Android SDK 36
-        uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: |
+          SDKMGR="$(find "$ANDROID_HOME/cmdline-tools" -maxdepth 2 -name sdkmanager -type f | head -n 1)"
+          yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
+          "$SDKMGR" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Make gradlew executable
         run: chmod +x gradlew

@@ -29,7 +29,7 @@ on:
 jobs:
   debug:
     name: Debug APK + tests + lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     steps:
@@ -45,6 +45,7 @@ jobs:
 
       - name: Install Android SDK packages
         run: |
+          ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           SDKMGR="$(find "$ANDROID_HOME/cmdline-tools" -maxdepth 2 -name sdkmanager -type f | head -n 1)"
           yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
           "$SDKMGR" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
@@ -83,7 +84,7 @@ jobs:
 
   release-check:
     name: Release compile check (unsigned, not installable)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     needs: debug
 
@@ -100,6 +101,7 @@ jobs:
 
       - name: Install Android SDK packages
         run: |
+          ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           SDKMGR="$(find "$ANDROID_HOME/cmdline-tools" -maxdepth 2 -name sdkmanager -type f | head -n 1)"
           yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
           "$SDKMGR" "platform-tools" "platforms;android-36" "build-tools;36.0.0"

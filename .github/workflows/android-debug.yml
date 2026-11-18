@@ -1,0 +1,107 @@
+# AE:CARDINAL R1 — build en GitHub Actions (debug + tests + lint)
+#
+# Para qué sirve: compilar el proyecto en la nube de GitHub, sin usar la
+# laptop Samsung NP355E4C (AMD E1-1200, 4 GB RAM) ni el teléfono con Termux.
+# El runner de GitHub (ubuntu-latest) hace el trabajo pesado y deja el APK
+# debug como artefacto descargable.
+#
+# Verificado contra el proyecto real (AE-CARDINAL-R1-main):
+# - Gradle 9.3.1 vía wrapper (gradle/wrapper/gradle-wrapper.properties)
+# - AGP 9.1.1, Kotlin 2.4.0, JDK/toolchain 21 (app/build.gradle: kotlin jvmToolchain(21))
+# - compileSdk 36 / targetSdk 36 / minSdk 26, un solo módulo :app
+# - Debug no necesita keystore ni google-services.json
+#   (googleServices.missing.passthrough=true en gradle.properties)
+# - Lint estricto: warningsAsErrors + abortOnError, baseline en lint-baseline.xml
+# - Release SIN firma falla a propósito; solo se comprueba con
+#   -PallowUnsignedRelease=true (ver app/build.gradle, taskGraph guard).
+#   Ese APK unsigned NO es instalable ni distribuible.
+#
+# Instalación: copia este archivo a .github/workflows/android-debug.yml
+# en la raíz del repositorio y haz push. No hay que tocar nada del código.
+
+name: Android debug build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    name: Debug APK + tests + lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up Android SDK 36
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Run unit tests
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
+      - name: Run lint (debug)
+        run: ./gradlew :app:lintDebug --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload test + lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-debug
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-results-debug.html
+            app/build/test-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+  release-check:
+    name: Release compile check (unsigned, not installable)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: debug
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up Android SDK 36
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      # Ejercita R8/ProGuard sin secretos de firma. El APK resultante es
+      # unsigned y NO se sube como artefacto: no se puede instalar.
+      - name: Assemble unsigned release (compile check only)
+        run: ./gradlew :app:assembleRelease -PallowUnsignedRelease=true --stacktrace

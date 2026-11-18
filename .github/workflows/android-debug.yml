@@ -55,13 +55,13 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --refresh-dependencies --stacktrace
 
       - name: Run unit tests
-        run: ./gradlew :app:testDebugUnitTest --stacktrace
+        run: ./gradlew :app:testDebugUnitTest --refresh-dependencies --stacktrace
 
       - name: Run lint (debug)
-        run: ./gradlew :app:lintDebug --stacktrace
+        run: ./gradlew :app:lintDebug --refresh-dependencies --stacktrace
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -114,4 +114,4 @@ jobs:
       # Ejercita R8/ProGuard sin secretos de firma. El APK resultante es
       # unsigned y NO se sube como artefacto: no se puede instalar.
       - name: Assemble unsigned release (compile check only)
-        run: ./gradlew :app:assembleRelease -PallowUnsignedRelease=true --stacktrace
+        run: ./gradlew :app:assembleRelease -PallowUnsignedRelease=true --refresh-dependencies --stacktrace

@@ -734,12 +734,12 @@ fun ChatBubble(
     val bubbleColor = if (isAgent) {
         CardBackground
     } else {
-        if (AppTheme.colors.isDark) Color(0xFF1E1E22) else Color(0xFFF1F3F5)
+        if (AppTheme.colors.isDark) Color(0xFF1A1A2E) else Color(0xFFF1F3F5)
     }
     val bubbleBorder = if (isAgent) {
         BorderColor
     } else {
-        if (AppTheme.colors.isDark) Color(0xFF2E2E34) else Color(0xFFE2E8F0)
+        if (AppTheme.colors.isDark) Color(0xFF26264D) else Color(0xFFE2E8F0)
     }
     val textColor = TextPrimary
     val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }

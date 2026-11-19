@@ -165,7 +165,7 @@ fun SettingsScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(1.dp, Color(0xFFFF9800), RoundedCornerShape(12.dp)),
+                            .border(1.dp, AccentFuchsia, RoundedCornerShape(12.dp)),
                         colors = CardDefaults.cardColors(containerColor = CardBackground)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -174,7 +174,7 @@ fun SettingsScreen(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
-                                color = Color(0xFFFF9800)
+                                color = AccentFuchsia
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
@@ -186,7 +186,7 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Button(
                                 onClick = viewModel::resetProviderCredentialsForReentry,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                                colors = ButtonDefaults.buttonColors(containerColor = AccentFuchsia)
                             ) {
                                 Text("Clear unavailable credentials", color = DarkBackground)
                             }
@@ -202,7 +202,7 @@ fun SettingsScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(1.dp, Color(0xFFFF9800), RoundedCornerShape(12.dp)),
+                            .border(1.dp, AccentFuchsia, RoundedCornerShape(12.dp)),
                         colors = CardDefaults.cardColors(containerColor = CardBackground)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -211,7 +211,7 @@ fun SettingsScreen(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
-                                color = Color(0xFFFF9800)
+                                color = AccentFuchsia
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
@@ -818,7 +818,7 @@ fun SettingsScreen(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
-                                color = Color(0xFFFF9800)
+                                color = AccentFuchsia
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
@@ -856,7 +856,7 @@ fun SettingsScreen(
                                             }
                                         },
                                         colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = Color(0xFFFF9800),
+                                            focusedBorderColor = AccentFuchsia,
                                             unfocusedBorderColor = BorderColor,
                                             focusedTextColor = TextPrimary,
                                             unfocusedTextColor = TextPrimary
@@ -885,7 +885,7 @@ fun SettingsScreen(
                                                 },
                                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                                             ) {
-                                                Text("📋 Paste", fontSize = 11.sp, color = Color(0xFFFF9800))
+                                                Text("📋 Paste", fontSize = 11.sp, color = AccentFuchsia)
                                             }
 
                                             TextButton(
@@ -930,7 +930,7 @@ fun SettingsScreen(
                                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                             Button(
                                                 onClick = { viewModel.validateHuggingFaceToken() },
-                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                                                colors = ButtonDefaults.buttonColors(containerColor = AccentFuchsia),
                                                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                                                 modifier = Modifier.height(28.dp)
                                             ) {
@@ -962,7 +962,7 @@ fun SettingsScreen(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
-                                color = Color(0xFFFF9800)
+                                color = AccentFuchsia
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
@@ -1019,12 +1019,12 @@ fun SettingsScreen(
                                                         Spacer(modifier = Modifier.width(6.dp))
                                                         Box(
                                                             modifier = Modifier
-                                                                .background(Color(0xFFFF9800).copy(alpha = 0.15f), RoundedCornerShape(4.dp))
+                                                                .background(AccentFuchsia.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
                                                                 .padding(horizontal = 4.dp, vertical = 2.dp)
                                                         ) {
                                                             Text(
                                                                 text = "REC",
-                                                                color = Color(0xFFFF9800),
+                                                                color = AccentFuchsia,
                                                                 fontSize = 8.sp,
                                                                 fontWeight = FontWeight.Bold
                                                             )
@@ -1034,7 +1034,7 @@ fun SettingsScreen(
                                                     Box(
                                                         modifier = Modifier
                                                             .background(
-                                                                if (spec.authRequired) Color(0xFFFF9800).copy(alpha = 0.12f)
+                                                                if (spec.authRequired) AccentFuchsia.copy(alpha = 0.12f)
                                                                 else AccentCyan.copy(alpha = 0.12f),
                                                                 RoundedCornerShape(4.dp)
                                                             )
@@ -1042,7 +1042,7 @@ fun SettingsScreen(
                                                     ) {
                                                         Text(
                                                             text = if (spec.authRequired) "GATED · HF TOKEN" else "PUBLIC · NO TOKEN",
-                                                            color = if (spec.authRequired) Color(0xFFFF9800) else AccentCyan,
+                                                            color = if (spec.authRequired) AccentFuchsia else AccentCyan,
                                                             fontSize = 8.sp,
                                                             fontWeight = FontWeight.Bold
                                                         )
@@ -1065,7 +1065,7 @@ fun SettingsScreen(
                                             
                                             val badgeColor = when (status) {
                                                 ModelStatus.READY -> AccentCyan
-                                                ModelStatus.DOWNLOADING -> Color(0xFFFF9800)
+                                                ModelStatus.DOWNLOADING -> AccentFuchsia
                                                 ModelStatus.PAUSED -> Color.Yellow
                                                 ModelStatus.LOADING -> AccentCyan
                                                 ModelStatus.FAILED -> Color.Red
@@ -1100,7 +1100,7 @@ fun SettingsScreen(
                                                     .fillMaxWidth()
                                                     .height(4.dp)
                                                     .clip(RoundedCornerShape(2.dp)),
-                                                color = Color(0xFFFF9800),
+                                                color = AccentFuchsia,
                                                 trackColor = BorderColor
                                             )
                                             Spacer(modifier = Modifier.height(4.dp))
@@ -1149,7 +1149,7 @@ fun SettingsScreen(
                                                                 viewModel.resumeDownload(spec.id)
                                                             }
                                                         },
-                                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                                                        colors = ButtonDefaults.buttonColors(containerColor = AccentFuchsia),
                                                         modifier = Modifier.height(28.dp).padding(horizontal = 4.dp),
                                                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                                                     ) {
@@ -1184,11 +1184,11 @@ fun SettingsScreen(
                                                 val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                                                 Button(
                                                     onClick = { uriHandler.openUri(spec.licenseUrl) },
-                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800).copy(alpha = 0.2f)),
+                                                    colors = ButtonDefaults.buttonColors(containerColor = AccentFuchsia.copy(alpha = 0.2f)),
                                                     modifier = Modifier.fillMaxWidth().height(28.dp),
                                                     contentPadding = PaddingValues(vertical = 2.dp)
                                                 ) {
-                                                    Text("Open Model Page", color = Color(0xFFFF9800), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                                    Text("Open Model Page", color = AccentFuchsia, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                                 }
                                             }
                                         }
@@ -1217,7 +1217,7 @@ fun SettingsScreen(
                                                                         viewModel.downloadModel(spec.id)
                                                                     }
                                                                 },
-                                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                                                                colors = ButtonDefaults.buttonColors(containerColor = AccentFuchsia),
                                                                 modifier = Modifier.weight(1f).height(32.dp),
                                                                 contentPadding = PaddingValues(horizontal = 4.dp)
                                                             ) {
@@ -1294,7 +1294,7 @@ fun SettingsScreen(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
-                                color = Color(0xFFFF9800)
+                                color = AccentFuchsia
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
@@ -1424,7 +1424,7 @@ fun SettingsScreen(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
-                                color = Color(0xFFFF9800)
+                                color = AccentFuchsia
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             
@@ -1455,7 +1455,7 @@ fun SettingsScreen(
                                      .fillMaxWidth()
                                      .height(6.dp)
                                      .clip(RoundedCornerShape(3.dp)),
-                                 color = Color(0xFFFF9800),
+                                 color = AccentFuchsia,
                                  trackColor = BorderColor
                              )
                              Spacer(modifier = Modifier.height(6.dp))
@@ -2444,7 +2444,7 @@ fun SettingsScreen(
             confirmButton = {
                 Button(
                     onClick = { showAuthRequiredDialog = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentFuchsia)
                 ) {
                     Text("OK", color = DarkBackground)
                 }
@@ -2477,7 +2477,7 @@ fun SettingsScreen(
                         showCellularWarningDialog = null
                         viewModel.downloadModel(modelIdToDownload)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentFuchsia)
                 ) {
                     Text("Download", color = DarkBackground)
                 }
@@ -2510,7 +2510,7 @@ fun SettingsScreen(
                         pendingCellularResumeModelId = null
                         viewModel.resumeDownload(modelIdToResume)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentFuchsia)
                 ) {
                     Text("Resume", color = DarkBackground)
                 }
@@ -2549,7 +2549,7 @@ fun SettingsScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     when {
                         isImporting -> {
-                            CircularProgressIndicator(color = Color(0xFFFF9800))
+                            CircularProgressIndicator(color = AccentFuchsia)
                             Spacer(modifier = Modifier.height(12.dp))
                             Text("Copying and verifying the model file. This may take a minute...", color = TextSecondary)
                         }
@@ -2570,7 +2570,7 @@ fun SettingsScreen(
                 if (!isImporting) {
                     Button(
                         onClick = { viewModel.clearImportStatus() },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentFuchsia)
                     ) {
                         Text("OK", color = DarkBackground)
                     }

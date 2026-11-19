@@ -1,10 +1,10 @@
 package com.opendroid.ai.ui.theme
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.RectangleShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 

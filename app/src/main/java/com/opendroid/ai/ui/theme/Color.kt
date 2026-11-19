@@ -8,8 +8,12 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 
 /**
- * OpenDroid color palette — resolved via CompositionLocal so all screens
- * automatically adapt to the active theme (light / dark).
+ * OpenDroid color palette — retro-cyberpunk / neon edition.
+ *
+ * Main colors: hot fuchsia (#FF00E5) and electric cyan (#00F0FF).
+ * Secondary: pure white and black. The palette is resolved via
+ * CompositionLocal so all screens automatically adapt to the active
+ * theme (dark / light).
  */
 data class OpenDroidColors(
     val background: Color,
@@ -18,9 +22,10 @@ data class OpenDroidColors(
     val borderColor: Color,
     val textPrimary: Color,
     val textSecondary: Color,
-    val accentNeonGreen: Color,
-    /** Calmer green for large filled button surfaces (neon is for thin marks only). */
-    val accentGreenButton: Color,
+    /** Hot fuchsia — the primary neon accent (thin marks, highlights). */
+    val accentFuchsia: Color,
+    /** Hot fuchsia for large filled button surfaces (black text on top). */
+    val accentFuchsiaButton: Color,
     val accentPurple: Color,
     val accentCyan: Color,
     val accentRed: Color,
@@ -28,35 +33,38 @@ data class OpenDroidColors(
     val isDark: Boolean
 )
 
-// ── Dark palette: Classic Pure Black (#000000) ───────────────
+// ── Dark palette: Neon Night ──────────────────────────────────
+// Near-black violet background, hot fuchsia + electric cyan neons.
 val DarkPalette = OpenDroidColors(
-    background = Color(0xFF000000),      // Classic pure OLED black
-    surface = Color(0xFF0A0A0A),         // Deep charcoal surface
-    cardBackground = Color(0xFF141416),  // Elevated card surface
-    borderColor = Color(0xFF27272A),     // Zinc 800 hairline border
+    background = Color(0xFF05050F),      // Near-black with a violet tint
+    surface = Color(0xFF0B0B1A),         // Deep violet-black surface
+    cardBackground = Color(0xFF12122B),  // Elevated violet card surface
+    borderColor = Color(0xFF2A2A4D),     // Dim violet hairline border
     textPrimary = Color(0xFFFFFFFF),     // Pure white
-    textSecondary = Color(0xFFA1A1AA),   // Zinc 400 silver
-    accentNeonGreen = Color(0xFFFFFFFF), // High-contrast monochrome (replaces green)
-    accentGreenButton = Color(0xFFFFFFFF), // Crisp white button
-    accentPurple = Color(0xFFA855F7),    // Electric purple
-    accentCyan = Color(0xFF38BDF8),      // Sky sapphire
-    accentRed = Color(0xFFEF4444),       // Clean alert red
+    textSecondary = Color(0xFFB9B9D6),   // Cool lavender gray
+    accentFuchsia = Color(0xFFFF00E5),   // Hot fuchsia neon
+    accentFuchsiaButton = Color(0xFFFF00E5), // Hot fuchsia button
+    accentPurple = Color(0xFFA855F7),    // Electric violet (fuchsia's partner)
+    accentCyan = Color(0xFF00F0FF),      // Electric cyan neon
+    accentRed = Color(0xFFFF2D55),       // Hot pink-red alert
     accentOrange = Color(0xFFFF9500),
     isDark = true
 )
 
-// ── Light palette: Classic Pure White (#FFFFFF) ─────────────
+// ── Light palette: Neon Day ───────────────────────────────────
+// White terminal: pure white background, black text, the same neons
+// darkened just enough to stay readable on white.
 val LightPalette = OpenDroidColors(
-    background = Color(0xFFFFFFFF),      // Classic pure white
-    surface = Color(0xFFF8F9FA),         // Crisp light surface
+    background = Color(0xFFFFFFFF),      // Pure white
+    surface = Color(0xFFF4F4FA),         // Crisp lavender-white surface
     cardBackground = Color(0xFFFFFFFF),  // Pure white card
-    borderColor = Color(0xFFE4E4E7),     // Zinc 200 hairline border
-    textPrimary = Color(0xFF09090B),     // Deep obsidian black
-    textSecondary = Color(0xFF71717A),   // Zinc 500 slate
-    accentNeonGreen = Color(0xFF09090B), // High-contrast monochrome (replaces green)
-    accentGreenButton = Color(0xFF09090B), // Crisp black button
+    borderColor = Color(0xFFE0E0F0),     // Pale lavender hairline border
+    textPrimary = Color(0xFF0A0A14),     // Near-black
+    textSecondary = Color(0xFF5A5A72),   // Slate violet
+    accentFuchsia = Color(0xFFD100B8),   // Deep fuchsia (readable on white)
+    accentFuchsiaButton = Color(0xFFD100B8), // Deep fuchsia button
     accentPurple = Color(0xFF7E22CE),    // Purple
-    accentCyan = Color(0xFF0284C7),      // Ocean sapphire
+    accentCyan = Color(0xFF0891B2),      // Deep cyan (readable on white)
     accentRed = Color(0xFFDC2626),       // Clean alert red
     accentOrange = Color(0xFFD97706),
     isDark = false
@@ -106,15 +114,15 @@ val TextSecondary: Color
     @ReadOnlyComposable
     get() = AppTheme.colors.textSecondary
 
-val AccentNeonGreen: Color
+val AccentFuchsia: Color
     @Composable
     @ReadOnlyComposable
-    get() = AppTheme.colors.accentNeonGreen
+    get() = AppTheme.colors.accentFuchsia
 
-val AccentGreenButton: Color
+val AccentFuchsiaButton: Color
     @Composable
     @ReadOnlyComposable
-    get() = AppTheme.colors.accentGreenButton
+    get() = AppTheme.colors.accentFuchsiaButton
 
 val AccentPurple: Color
     @Composable
@@ -135,4 +143,3 @@ val AccentOrange: Color
     @Composable
     @ReadOnlyComposable
     get() = AppTheme.colors.accentOrange
-

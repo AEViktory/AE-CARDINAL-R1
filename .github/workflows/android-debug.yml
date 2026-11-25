@@ -64,6 +64,22 @@ jobs:
           yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
           "$SDKMGR" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
+      # El egress compartido de GitHub suele recibir 429 de Maven Central.
+      # Un espejo primero evita fallos intermitentes al resolver Robolectric.
+      - name: Configure Maven Central mirror
+        run: |
+          mkdir -p "$HOME/.gradle/init.d"
+          cat > "$HOME/.gradle/init.d/maven-mirror.gradle" <<'EOF'
+          settingsEvaluated { settings ->
+            def repos = settings.dependencyResolutionManagement.repositories
+            repos.clear()
+            repos.maven { url = 'https://maven.aliyun.com/repository/central' }
+            repos.maven { url = 'https://repo.maven.apache.org/maven2/' }
+            repos.google()
+            repos.maven { url = 'https://jitpack.io' }
+          }
+          EOF
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
@@ -140,6 +156,22 @@ jobs:
           if [ -z "$SDKMGR" ]; then echo "sdkmanager not found under $ANDROID_HOME/cmdline-tools"; ls -R "$ANDROID_HOME/cmdline-tools" 2>/dev/null | head -n 20; exit 1; fi
           yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
           "$SDKMGR" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      # El egress compartido de GitHub suele recibir 429 de Maven Central.
+      # Un espejo primero evita fallos intermitentes al resolver Robolectric.
+      - name: Configure Maven Central mirror
+        run: |
+          mkdir -p "$HOME/.gradle/init.d"
+          cat > "$HOME/.gradle/init.d/maven-mirror.gradle" <<'EOF'
+          settingsEvaluated { settings ->
+            def repos = settings.dependencyResolutionManagement.repositories
+            repos.clear()
+            repos.maven { url = 'https://maven.aliyun.com/repository/central' }
+            repos.maven { url = 'https://repo.maven.apache.org/maven2/' }
+            repos.google()
+            repos.maven { url = 'https://jitpack.io' }
+          }
+          EOF
 
       - name: Make gradlew executable
         run: chmod +x gradlew

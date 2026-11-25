@@ -26,6 +26,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   debug:
     name: Debug APK + tests + lint
@@ -34,14 +41,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 21 (Temurin)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
           cache: gradle
+          cache-dependency-path: |
+            gradle/wrapper/gradle-wrapper.properties
+            build.gradle.kts
+            settings.gradle.kts
+            gradle.properties
+            app/build.gradle
 
       - name: Install Android SDK packages
         run: |
@@ -55,10 +68,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --refresh-dependencies --stacktrace
+        run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Run unit tests
-        run: ./gradlew :app:testDebugUnitTest --refresh-dependencies --stacktrace
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
 
       # Lint es informativo en el build debug: el proyecto tiene 87
       # hallazgos preexistentes (versiones de dependencias, DefaultLocale,
@@ -67,10 +80,10 @@ jobs:
       # pasen; el reporte sigue generándose y subiéndose como artefacto.
       - name: Run lint (debug)
         continue-on-error: true
-        run: ./gradlew :app:lintDebug --refresh-dependencies --stacktrace
+        run: ./gradlew :app:lintDebug --stacktrace
 
       - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
@@ -79,7 +92,7 @@ jobs:
 
       - name: Upload test + lint reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reports-debug
           path: |
@@ -97,14 +110,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 21 (Temurin)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
           cache: gradle
+          cache-dependency-path: |
+            gradle/wrapper/gradle-wrapper.properties
+            build.gradle.kts
+            settings.gradle.kts
+            gradle.properties
+            app/build.gradle
 
       - name: Install Android SDK packages
         run: |
@@ -120,4 +139,4 @@ jobs:
       # Ejercita R8/ProGuard sin secretos de firma. El APK resultante es
       # unsigned y NO se sube como artefacto: no se puede instalar.
       - name: Assemble unsigned release (compile check only)
-        run: ./gradlew :app:assembleRelease -PallowUnsignedRelease=true --refresh-dependencies --stacktrace
+        run: ./gradlew :app:assembleRelease -PallowUnsignedRelease=true --stacktrace

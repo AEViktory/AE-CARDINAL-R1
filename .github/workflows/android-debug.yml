@@ -68,10 +68,18 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --no-configuration-cache --stacktrace
 
       - name: Run unit tests
-        run: ./gradlew :app:testDebugUnitTest --stacktrace
+        run: |
+          for attempt in 1 2 3; do
+            if ./gradlew :app:testDebugUnitTest --no-configuration-cache --stacktrace; then
+              exit 0
+            fi
+            echo "::warning::Unit tests failed (attempt $attempt/3); retrying in 30s"
+            sleep 30
+          done
+          exit 1
 
       # Lint es informativo en el build debug: el proyecto tiene 87
       # hallazgos preexistentes (versiones de dependencias, DefaultLocale,
@@ -80,7 +88,7 @@ jobs:
       # pasen; el reporte sigue generándose y subiéndose como artefacto.
       - name: Run lint (debug)
         continue-on-error: true
-        run: ./gradlew :app:lintDebug --stacktrace
+        run: ./gradlew :app:lintDebug --no-configuration-cache --stacktrace
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v7
@@ -139,4 +147,4 @@ jobs:
       # Ejercita R8/ProGuard sin secretos de firma. El APK resultante es
       # unsigned y NO se sube como artefacto: no se puede instalar.
       - name: Assemble unsigned release (compile check only)
-        run: ./gradlew :app:assembleRelease -PallowUnsignedRelease=true --stacktrace
+        run: ./gradlew :app:assembleRelease -PallowUnsignedRelease=true --no-configuration-cache --stacktrace

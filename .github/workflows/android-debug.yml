@@ -78,6 +78,12 @@ jobs:
             repos.google()
             repos.maven { url = 'https://jitpack.io' }
           }
+          allprojects {
+            tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+              systemProperty 'robolectric.dependency.repo.url', 'https://maven.aliyun.com/repository/central'
+              systemProperty 'robolectric.dependency.repo.id', 'central-mirror'
+            }
+          }
           EOF
 
       - name: Make gradlew executable
@@ -170,6 +176,12 @@ jobs:
             repos.maven { url = 'https://repo.maven.apache.org/maven2/' }
             repos.google()
             repos.maven { url = 'https://jitpack.io' }
+          }
+          allprojects {
+            tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+              systemProperty 'robolectric.dependency.repo.url', 'https://maven.aliyun.com/repository/central'
+              systemProperty 'robolectric.dependency.repo.id', 'central-mirror'
+            }
           }
           EOF
 
